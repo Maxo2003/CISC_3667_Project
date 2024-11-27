@@ -11,6 +11,9 @@ TagManager:
   - Pin
   - Obstacle
   - Scoreboard
+  - ShowInPauseMode
+  - ShowInPlayMode
+  - GameSettings
   layers:
   - Default
   - TransparentFX
@@ -50,4 +53,7 @@ TagManager:
     locked: 0
   - name: Default
     uniqueID: 0
+    locked: 0
+  - name: Foreground
+    uniqueID: 3065970319
     locked: 0
