@@ -11,9 +11,13 @@ TagManager:
   - Pin
   - Obstacle
   - Scoreboard
-  - ShowInPauseMode
-  - ShowInPlayMode
   - GameSettings
+  - SettingsElements
+  - Resume
+  - Pause
+  - ShowInPlayMode
+  - ShowInPauseMode
+  - NameInput
   layers:
   - Default
   - TransparentFX
