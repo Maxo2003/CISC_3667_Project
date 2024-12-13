@@ -147,7 +147,8 @@ TextureImporter:
     secondaryTextures: []
     spriteCustomMetadata:
       entries: []
-    nameFileIdTable: {}
+    nameFileIdTable:
+      CongratsScreensGame_0: 1936810293525696514
   mipmapLimitGroupName: 
   pSDRemoveMatte: 0
   userData: 
