@@ -13,7 +13,7 @@ public class Movement : MonoBehaviour {
     public bool isFacingRight = true;
     [SerializeField] private bool isUpright = true;
     [SerializeField] private bool jumpPressed;
-    [SerializeField] private float jumpForce = 1000.0f;
+    [SerializeField] private float jumpForce = 600.0f;
     [SerializeField] private bool isGrounded = true;
     [FormerlySerializedAs("pinPFB")] [SerializeField]
     private GameObject pinPfb;

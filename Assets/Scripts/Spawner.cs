@@ -42,7 +42,7 @@ public class Spawner : MonoBehaviour
                 sceneName = SceneManager.GetActiveScene().name;
                 if (sceneName is "Scene1" or "Scene2")
                 {
-                    ObstacleSpawner(SceneManager.GetActiveScene().buildIndex -1);
+                    ObstacleSpawner(SceneManager.GetActiveScene().buildIndex);
                 }
 
                 break;

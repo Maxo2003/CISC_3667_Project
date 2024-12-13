@@ -52,7 +52,7 @@ public class Scorekeeper : MonoBehaviour
 
     private void DisplayScore(){
         scoreTxt.text = "Score: " + score;
-        sceneTxt.text = "Scene: " + (level-1);
+        sceneTxt.text = "Scene: " + (level);
     }
 
     public void ChangeScene(){

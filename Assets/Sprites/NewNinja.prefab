@@ -110,7 +110,7 @@ MonoBehaviour:
   isFacingRight: 1
   isUpright: 1
   jumpPressed: 0
-  jumpForce: 500
+  jumpForce: 600
   isGrounded: 1
   pinPfb: {fileID: 2129829742382164370, guid: b960c6450822fb142bbe0ac5d889a7ab, type: 3}
   attack: 1
