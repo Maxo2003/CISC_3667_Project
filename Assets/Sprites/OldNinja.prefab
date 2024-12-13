@@ -106,9 +106,10 @@ MonoBehaviour:
   isFacingRight: 1
   isUpright: 1
   jumpPressed: 0
-  jumpForce: 500
+  jumpForce: 750
   isGrounded: 1
-  pinPFB: {fileID: 2129829742382164370, guid: b960c6450822fb142bbe0ac5d889a7ab, type: 3}
+  pinPfb: {fileID: 2129829742382164370, guid: b960c6450822fb142bbe0ac5d889a7ab, type: 3}
+  attack: 1
 --- !u!50 &1089022316930014390
 Rigidbody2D:
   serializedVersion: 4

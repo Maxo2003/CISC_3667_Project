@@ -1,10 +1,11 @@
+using System;
 using UnityEngine;
-using UnityEngine.EventSystems;
 using UnityEngine.Events;
+using UnityEngine.EventSystems;
 
 public class UIVirtualTouchZone : MonoBehaviour, IPointerDownHandler, IDragHandler, IPointerUpHandler
 {
-    [System.Serializable]
+    [Serializable]
     public class Event : UnityEvent<Vector2> { }
 
     [Header("Rect References")]
@@ -18,13 +19,13 @@ public class UIVirtualTouchZone : MonoBehaviour, IPointerDownHandler, IDragHandl
     public bool invertYOutputValue;
 
     //Stored Pointer Values
-    private Vector2 pointerDownPosition;
-    private Vector2 currentPointerPosition;
+    private Vector2 _pointerDownPosition;
+    private Vector2 _currentPointerPosition;
 
     [Header("Output")]
     public Event touchZoneOutputEvent;
 
-    void Start()
+    private void Start()
     {
         SetupHandle();
     }
@@ -40,21 +41,21 @@ public class UIVirtualTouchZone : MonoBehaviour, IPointerDownHandler, IDragHandl
     public void OnPointerDown(PointerEventData eventData)
     {
 
-        RectTransformUtility.ScreenPointToLocalPointInRectangle(containerRect, eventData.position, eventData.pressEventCamera, out pointerDownPosition);
+        RectTransformUtility.ScreenPointToLocalPointInRectangle(containerRect, eventData.position, eventData.pressEventCamera, out _pointerDownPosition);
 
         if(handleRect)
         {
             SetObjectActiveState(handleRect.gameObject, true);
-            UpdateHandleRectPosition(pointerDownPosition);
+            UpdateHandleRectPosition(_pointerDownPosition);
         }
     }
 
     public void OnDrag(PointerEventData eventData)
     {
 
-        RectTransformUtility.ScreenPointToLocalPointInRectangle(containerRect, eventData.position, eventData.pressEventCamera, out currentPointerPosition);
+        RectTransformUtility.ScreenPointToLocalPointInRectangle(containerRect, eventData.position, eventData.pressEventCamera, out _currentPointerPosition);
         
-        Vector2 positionDelta = GetDeltaBetweenPositions(pointerDownPosition, currentPointerPosition);
+        Vector2 positionDelta = GetDeltaBetweenPositions(_pointerDownPosition, _currentPointerPosition);
 
         Vector2 clampedPosition = ClampValuesToMagnitude(positionDelta);
         
@@ -65,8 +66,8 @@ public class UIVirtualTouchZone : MonoBehaviour, IPointerDownHandler, IDragHandl
 
     public void OnPointerUp(PointerEventData eventData)
     {
-        pointerDownPosition = Vector2.zero;
-        currentPointerPosition = Vector2.zero;
+        _pointerDownPosition = Vector2.zero;
+        _currentPointerPosition = Vector2.zero;
 
         OutputPointerEventValue(Vector2.zero);
 
@@ -77,32 +78,32 @@ public class UIVirtualTouchZone : MonoBehaviour, IPointerDownHandler, IDragHandl
         }
     }
 
-    void OutputPointerEventValue(Vector2 pointerPosition)
+    private void OutputPointerEventValue(Vector2 pointerPosition)
     {
         touchZoneOutputEvent.Invoke(pointerPosition);
     }
 
-    void UpdateHandleRectPosition(Vector2 newPosition)
+    private void UpdateHandleRectPosition(Vector2 newPosition)
     {
         handleRect.anchoredPosition = newPosition;
     }
 
-    void SetObjectActiveState(GameObject targetObject, bool newState)
+    private void SetObjectActiveState(GameObject targetObject, bool newState)
     {
         targetObject.SetActive(newState);
     }
 
-    Vector2 GetDeltaBetweenPositions(Vector2 firstPosition, Vector2 secondPosition)
+    private Vector2 GetDeltaBetweenPositions(Vector2 firstPosition, Vector2 secondPosition)
     {
         return secondPosition - firstPosition;
     }
 
-    Vector2 ClampValuesToMagnitude(Vector2 position)
+    private Vector2 ClampValuesToMagnitude(Vector2 position)
     {
         return Vector2.ClampMagnitude(position, 1);
     }
 
-    Vector2 ApplyInversionFilter(Vector2 position)
+    private Vector2 ApplyInversionFilter(Vector2 position)
     {
         if(invertXOutputValue)
         {
@@ -117,7 +118,7 @@ public class UIVirtualTouchZone : MonoBehaviour, IPointerDownHandler, IDragHandl
         return position;
     }
 
-    float InvertValue(float value)
+    private float InvertValue(float value)
     {
         return -value;
     }

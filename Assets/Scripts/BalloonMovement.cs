@@ -1,38 +1,45 @@
-using System.Collections;
-using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 
-
 public class BalloonMovement : MonoBehaviour
 {
-    [SerializeField] float movement = 0.85f;
-    [SerializeField] Rigidbody2D rigid;
-    [SerializeField] const int SPEED = 15;
-    [SerializeField] const float SCALE_CHANGE = 1.5f;
-    [SerializeField] bool isFacingRight = true;
-    [SerializeField] bool checkingPosition;
+    private static readonly int IsPopped = Animator.StringToHash("IsPopped");
+    [SerializeField] private float movement = 0.85f;
+    [SerializeField] private Rigidbody2D rigid;
+    private const int Speed = 15;
+    private const float ScaleChange = 1.5f;
+    [SerializeField] private bool isFacingRight = true;
+    [SerializeField] private bool checkingPosition;
     //[SerializeField] GameObject Balloon;
-    [SerializeField] bool popCalled = false;
-    [SerializeField] bool poppedByPlayer = false;
-    [SerializeField] const int X_VALUE_BOUNDARY = 18;
-    [SerializeField] const int X_VALUE_SAFEZONE = 0;
-    [SerializeField] AudioSource balloonAudio;
-    [SerializeField] GameObject controller;
-    [SerializeField] int repeaterCalled = 0;
-    private Animator balloonAnimator;
+    [SerializeField] private bool popCalled;
+    [SerializeField] private bool poppedByPlayer;
+    private const int XValueBoundary = 18;
+    private const int XValueSafeZone = 0;
+    [SerializeField] private GameObject controller;
+    [SerializeField] private int repeaterCalled;
+    private Animator _balloonAnimator;
 
     // Start is called before the first frame update
-    void Start()
+    private void Start()
     {
         //Scaling balloon periodically
-        InvokeRepeating("IncreaseSize", 2.0f, 3.0f);
+        InvokeRepeating(nameof(IncreaseSize), 2.0f, 2.0f);
+        if (PersistentData.Instance.GetDifficulty() == 0)
+        {
+            if (SceneManager.GetActiveScene().name == "Scene1")
+            {
+                movement = 1.0f;
+            }
 
-        if(SceneManager.GetActiveScene().name == "Scene1"){
-                    movement = 1.0f;
-        }
-
-        if(SceneManager.GetActiveScene().name == "Scene2"){
+            if (SceneManager.GetActiveScene().name == "Scene2")
+            {
+                movement = 2.0f;
+            }
+        } else if (PersistentData.Instance.GetDifficulty() == 2)
+        {
+            movement = 1.0f;
+        } else if (PersistentData.Instance.GetDifficulty() == 3)
+        {
             movement = 2.0f;
         }
 
@@ -40,46 +47,42 @@ public class BalloonMovement : MonoBehaviour
 
         controller = GameObject.FindGameObjectWithTag("GameController");
 
-        balloonAnimator = GetComponent<Animator>();
+        _balloonAnimator = GetComponent<Animator>();
 
 
-        balloonAnimator.SetBool("IsPopped", false);
+        _balloonAnimator.SetBool(IsPopped, false);
 
 
-        balloonAudio = GetComponent<AudioSource>();
+        GetComponent<AudioSource>();
 
 
     }
 
     // Update is called once per frame --used for user input
     //do NOT use for physics & movement
-    void Update()
-    {
-
-    }
 
     //called potentially many times per frame
     //use for physics & movement
     private void FixedUpdate()
     {
     //Movement on X axis
-            rigid.velocity = new Vector2(SPEED * movement, rigid.velocity.y);
+            rigid.linearVelocity = new Vector2(Speed * movement, rigid.linearVelocity.y);
             if (movement < 0 && isFacingRight || movement > 0 && !isFacingRight){
                 FlipX();
-                }
+            }
 
             //Can object safely flip
-            if (transform.position.x > X_VALUE_SAFEZONE  && isFacingRight || transform.position.x < X_VALUE_SAFEZONE && !isFacingRight) {
-                        checkingPosition = true;
-                    }
+            if (transform.position.x > XValueSafeZone  && isFacingRight || transform.position.x < XValueSafeZone && !isFacingRight) {
+                checkingPosition = true;
+            }
 
             if(checkingPosition){
-                if (transform.position.x < -X_VALUE_BOUNDARY || transform.position.x > X_VALUE_BOUNDARY ) {
-                //Checking direction of movement
-                   checkingPosition = false;
+                if (transform.position.x < -XValueBoundary || transform.position.x > XValueBoundary ) {
+                    //Checking direction of movement
+                    checkingPosition = false;
 
-                   ChangeDirection();
-                   }
+                    ChangeDirection();
+                }
             }
 
             //If balloon gets too big, "pop" it
@@ -99,9 +102,9 @@ public class BalloonMovement : MonoBehaviour
         isFacingRight = !isFacingRight;
     }
 
-    void IncreaseSize()
+    private void IncreaseSize()
         {
-            transform.localScale *= SCALE_CHANGE;
+            transform.localScale *= ScaleChange;
             repeaterCalled++;
         }
 
@@ -109,7 +112,7 @@ public class BalloonMovement : MonoBehaviour
     private void OnCollisionEnter2D(Collision2D collision)
     {
         Debug.Log(collision.gameObject.tag);
-        if (collision.gameObject.tag == "Side"){
+        if (collision.gameObject.CompareTag("Side")){
             ChangeDirection();
         }else{
             Debug.Log(collision.gameObject.tag);
@@ -117,29 +120,28 @@ public class BalloonMovement : MonoBehaviour
     }
 
      public void DestroyAfterAnimation(){
-        Debug.Log("DestroyAfterAnimation called");
         Destroy(gameObject);
+        var obj = controller.GetComponent<Scorekeeper>();
+        obj.RestartScene();
         if(poppedByPlayer){
-            controller.GetComponent<Scorekeeper>().changeScene();
-            }
+            controller.GetComponent<Scorekeeper>().ChangeScene();
+        }
      }
-
+ 
      private void PopBalloon(){
         if(popCalled){
-            return;
         } else{
             popCalled = true;
-            balloonAnimator.SetBool("IsPopped", true);
-            controller.GetComponent<Spawner>().BalloonPopped();
+            _balloonAnimator.SetBool(IsPopped, true);
             AudioSource.PlayClipAtPoint(GetComponent<AudioSource>().clip, transform.position);
-            } 
+        } 
      }
 
-     private void OnTriggerEnter2D(Collider2D collision) {
-            if (collision.gameObject.tag == "Pin"){
-                controller.GetComponent<Scorekeeper>().AddPoints(repeaterCalled);
-                poppedByPlayer = true;
-                PopBalloon();
-                }
-        }
+     private void OnTriggerEnter2D(Collider2D collision)
+     {
+         if (!collision.gameObject.CompareTag("Pin")) return;
+         controller.GetComponent<Scorekeeper>().AddPoints(repeaterCalled);
+         poppedByPlayer = true;
+         PopBalloon();
+     }
 }

@@ -1,80 +1,56 @@
-using System.Collections;
-using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.SceneManagement;
-using UnityEngine.UI;
-using TMPro;
+//
+using static UnityEngine.GameObject;
 
 public class Buttons : MonoBehaviour
 {
-
-/*
-    [SerializeField] bool isPaused = false;
-    [SerializeField] bool isResumed = false;
-*/
-    [SerializeField] TMP_InputField playerNameInput;
-    [SerializeField] GameObject pauseButton;
-    [SerializeField] GameObject playButton;
-    [SerializeField] GameObject settings;
-    [SerializeField] GameObject[] settingsElements;
-    [SerializeField] Slider volumeSlider;
-    public static float volume = 0.5f;
-    [SerializeField] TMP_Dropdown difficultyDropdown;
+    private static float _volume = 0.35f;
     public int difficulty;
-
+   // public static Buttons Instance;
     // Start is called before the first frame update
-    void Start()
+    private void Start()
     {
-         if(settings == null){
-            settings = GameObject.FindGameObjectWithTag("GameSettings");
-         }
-
-         if(settingsElements == null || settingsElements.Length == 0){
-            settingsElements = GameObject.FindGameObjectsWithTag("SettingsElements");
-         }
-
-         if(volumeSlider == null){
-            volumeSlider = settings.GetComponentInChildren<Slider>();
-         }
-
-         //volumeSlider.value = volume;
-         volumeSlider.onValueChanged.AddListener(delegate {ChangeVolume(volumeSlider.value); });
-
-         if(pauseButton == null){
-            pauseButton = GameObject.Find("Pause");
-         }
-
-         if(playButton == null){
-            playButton = GameObject.Find("Resume");
-         }
-
-        if(difficultyDropdown == null){
-            difficultyDropdown = settings.GetComponentInChildren<TMP_Dropdown>();
-        }
-
-        difficultyDropdown.onValueChanged.AddListener(delegate {DifficultySelected();});
-        difficulty = difficultyDropdown.value;
-
-        //pauseButton.SetActive(false);
-
-        Debug.Log("Input var empty?");
-        Debug.Log(playerNameInput == null);
-
-        foreach(GameObject g in settingsElements){
-            g.SetActive(false);
-        }
-
+        InitializeButtons();
     }
 
-    // Update is called once per frame
-    void Update()
+    public void InitializeButtons()
     {
+        if (!PersistentData.Instance.GetPauseButton())
+        {
+            PersistentData.Instance.SetPauseButton(Find("Pause"));
+        }
 
+        if (!PersistentData.Instance.GetPlayButton())
+        {
+            PersistentData.Instance.SetPlayButton(Find("Resume"));
+        }
+        
+        if (PersistentData.Instance.GetInitialized()) return;
+        AudioListener.volume = _volume;
+        PersistentData.Instance.SetVolume(_volume);
+
+        //volumeSlider.value = volume; 
+        PersistentData.Instance.GetVolumeSlider().onValueChanged.AddListener(delegate {ChangeVolume();});
+
+        PersistentData.Instance.GetDifficultyDropdown().onValueChanged.AddListener(delegate { DifficultySelected(); });
+        difficulty = PersistentData.Instance.GetDifficultyDropdown().value;
+
+        if (PersistentData.Instance.GetIsSettingsOpen())
+        {
+            foreach (var g in PersistentData.Instance.GetSettingsElements())
+            {
+                g.SetActive(false);
+            }
+
+            PersistentData.Instance.SetIsSettingsOpen(false);
+        }
+        PersistentData.Instance.GetPlayerNameInput().onEndEdit.AddListener(delegate { SavePlayerName(); });
+        PersistentData.Instance.SetInitialized(true);
+        
+        if (PersistentData.Instance.GetPlayButton() == null) return;
+        PersistentData.Instance.GetPlayButton().SetActive(false);
     }
-
-//     public void GetSettingsElements(){
-//         return settingsElements;
-//     }
 
     public void StartGame(){
         SceneManager.LoadScene("Scene0");
@@ -82,63 +58,81 @@ public class Buttons : MonoBehaviour
 
     public void Instructions(){
         SceneManager.LoadScene("Instructions");
+        if (!PersistentData.Instance.GetPlayerNameInput().gameObject.activeSelf) return;
+        PersistentData.Instance.GetPlayerNameInput().gameObject.SetActive(false);
     }
 
     public void MainMenu(){
         SceneManager.LoadScene("MainMenu");
+        PersistentData.Instance.SetScore(0);
+        if (PersistentData.Instance.GetNameSaved() || PersistentData.Instance.GetPlayerNameInput().gameObject.activeInHierarchy)
+        {
+            return;
+        }
+        PersistentData.Instance.GetPlayerNameInput().gameObject.SetActive(true);
     }
-
-    public void ChangeVolume(float v){
-        volume = v;
+    public void SettingsMainMenu()
+    {
+        if (SceneManager.GetActiveScene().name.Equals("MainMenu")) return;
+        SceneManager.LoadScene("MainMenu");
+        PersistentData.Instance.SetScore(0);
+    }
+    public void ChangeVolume(){
+        var v = PersistentData.Instance.GetVolumeSlider().value;
         AudioListener.volume = v;
+        PersistentData.Instance.SetVolume(v);
     }
-
-
-     public void OpenSettings(){
-         Debug.Log($"Found {settingsElements.Length} objects for SettingsElements for OpenSettings method");
-         int counter = 0;
-         foreach(GameObject g in settingsElements){
-            Debug.Log(counter++);
-            g.SetActive(true);
+    
+     public void ToggleSettings(){
+         if (!PersistentData.Instance.GetIsSettingsOpen())
+         {
+             foreach (var g in PersistentData.Instance.GetSettingsElements())
+             {
+                 g.SetActive(true);
+             }
          }
-         Debug.Log(counter + " items set active");
+         else
+         {
+             foreach (var g in PersistentData.Instance.GetSettingsElements())
+             {
+                 g.SetActive(false);
+             }
+         }
+         PersistentData.Instance.SetIsSettingsOpen(!PersistentData.Instance.GetIsSettingsOpen());
      }
+     
     public void CloseSettings(){
-         Debug.Log("CloseSettings called");
-
-         int counter = 0;
-         foreach(GameObject g in settingsElements){
-            counter++;
+         foreach(var g in PersistentData.Instance.GetSettingsElements()){
             g.SetActive(false);
          }
-         Debug.Log(counter + " items set inactive");
-
     }
 
 
     public void DifficultySelected(){
-        Debug.Log(difficultyDropdown.value);
+        difficulty = PersistentData.Instance.GetDifficultyDropdown().value;
+        PersistentData.Instance.SetDifficulty(difficulty);
     }
 
     public void Pause(){
         Time.timeScale = 0.0f;
 
-        pauseButton.gameObject.SetActive(false);
-        playButton.gameObject.SetActive(true);
+        PersistentData.Instance.GetPauseButton().gameObject.SetActive(false);
+        PersistentData.Instance.GetPlayButton().gameObject.SetActive(true);
     }
 
     public void Resume(){
         Time.timeScale = 1.0f;
 
-        pauseButton.SetActive(true);
-        playButton.SetActive(false);
+        PersistentData.Instance.GetPauseButton().SetActive(true);
+        PersistentData.Instance.GetPlayButton().SetActive(false);
     }
 
     public void SavePlayerName(){
-        Debug.Log(playerNameInput == null);
-        string s = playerNameInput.text;
+        var s = PersistentData.Instance.GetPlayerNameInput().text;
+        if (string.IsNullOrEmpty(s) || string.IsNullOrWhiteSpace(s)) return;
         PersistentData.Instance.SetName(s);
-        playerNameInput.gameObject.SetActive(false);
+        PersistentData.Instance.GetPlayerNameInput().gameObject.SetActive(false);
+        PersistentData.Instance.SetNameSaved(true);
     }
 
 

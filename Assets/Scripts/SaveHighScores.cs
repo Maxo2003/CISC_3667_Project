@@ -1,60 +1,51 @@
-using System.Collections;
-using System.Collections.Generic;
-using UnityEngine;
 using TMPro;
+using UnityEngine;
 
 public class SaveHighScores : MonoBehaviour
 {
-    [SerializeField] const int NUM_HIGH_SCORES = 5;
-    [SerializeField] const string NAME_KEY = "HighScoreName";
-    [SerializeField] const string SCORE_KEY = "HighScore";
+    private const int NumHighScores = 5;
+    private const string NameKey = "HighScoreName";
+    private const string ScoreKey = "HighScore";
 
-    [SerializeField] string playerName;
-    [SerializeField] int playerScore;
+    [SerializeField] private string playerName;
+    [SerializeField] private int playerScore;
 
-    [SerializeField] TextMeshProUGUI[] nameTexts;
-    [SerializeField] TextMeshProUGUI[] scoreTexts;
+    [SerializeField] private TextMeshProUGUI[] nameTexts;
+    [SerializeField] private TextMeshProUGUI[] scoreTexts;
 
 
     // Start is called before the first frame update
-    void Start()
+    private void Start()
     {
         playerName = PersistentData.Instance.GetName();
         playerScore = PersistentData.Instance.GetScore();
-
+        
         SaveScore();
         DisplayHighScores();
     }
 
     // Update is called once per frame
-    void Update()
-    {
-        
-    }
 
     private void SaveScore()
     {
-        for (int i = 0; i < NUM_HIGH_SCORES; i++)
+        for (var i = 0; i < NumHighScores; i++)
         {
-            string currentNameKey = NAME_KEY + i;
-            string currentScoreKey = SCORE_KEY + i;
+            var currentNameKey = NameKey + i;
+            var currentScoreKey = ScoreKey + i;
 
             {
                 if (PlayerPrefs.HasKey(currentScoreKey))
                 {
-                    int currentScore = PlayerPrefs.GetInt(currentScoreKey);
-                    if (playerScore > currentScore)
-                    {
-                        //handle this case
-                        int tempScore = currentScore;
-                        string tempName = PlayerPrefs.GetString(currentNameKey);
+                    var currentScore = PlayerPrefs.GetInt(currentScoreKey);
+                    if (playerScore <= currentScore) continue;
+                    //handle this case
+                    var tempName = PlayerPrefs.GetString(currentNameKey);
 
-                        PlayerPrefs.SetString(currentNameKey, playerName);
-                        PlayerPrefs.SetInt(currentScoreKey, playerScore);
+                    PlayerPrefs.SetString(currentNameKey, playerName);
+                    PlayerPrefs.SetInt(currentScoreKey, playerScore);
 
-                        playerScore = tempScore;
-                        playerName = tempName;
-                    }
+                    playerScore = currentScore;
+                    playerName = tempName;
 
                 }
                 else
@@ -67,12 +58,13 @@ public class SaveHighScores : MonoBehaviour
         }
     }
 
-    public void DisplayHighScores()
+    private void DisplayHighScores()
     {
-        for (int i = 0; i < NUM_HIGH_SCORES; i++)
+        for (var i = 0; i < NumHighScores; i++)
         {
-            nameTexts[i].text = PlayerPrefs.GetString(NAME_KEY+i);
-            scoreTexts[i].text = PlayerPrefs.GetInt(SCORE_KEY+i).ToString();
+            
+            nameTexts[i].text = PlayerPrefs.GetString(NameKey+i);
+            scoreTexts[i].text = PlayerPrefs.GetInt(ScoreKey+i).ToString();
         }
     }
 

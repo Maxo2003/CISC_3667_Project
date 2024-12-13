@@ -1,39 +1,41 @@
-using System.Collections;
-using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.Serialization;
 
 public class Movement : MonoBehaviour {
-    [SerializeField] float movementX;
-    [SerializeField] float movementY;
-    [SerializeField] bool firePressed;
-    [SerializeField] Rigidbody2D rigid;
-    [SerializeField] const int SPEED = 15;
-    [SerializeField] const float CLEARING_PLAYER_ON_INITIATION = 2.2f;
+    private static readonly int PlayerAttacks = Animator.StringToHash("PlayerAttacks");
+    private static readonly int PlayerAnimation = Animator.StringToHash("PlayerAnimation");
+    [SerializeField] private float movementX;
+    [SerializeField] private float movementY;
+    [SerializeField] private bool firePressed;
+    [SerializeField] private Rigidbody2D rigid;
+    private const int Speed = 15;
+    private const float ClearingPlayerOnInitiation = 2.2f;
     public bool isFacingRight = true;
-    [SerializeField] bool isUpright = true;
-    [SerializeField] bool jumpPressed = false;
-    [SerializeField] float jumpForce = 750.0f;
-    [SerializeField] bool isGrounded = true;
-    [SerializeField] GameObject pinPFB;
-    private Animator animator;
-    const int IDLE = 0;
-    const int RUN = 1;
-    public bool ATTACK = true;
-    const int JUMP = 3;
+    [SerializeField] private bool isUpright = true;
+    [SerializeField] private bool jumpPressed;
+    [SerializeField] private float jumpForce = 1000.0f;
+    [SerializeField] private bool isGrounded = true;
+    [FormerlySerializedAs("pinPFB")] [SerializeField]
+    private GameObject pinPfb;
+    private Animator _animator;
+    private const int Idle = 0;
+    private const int Run = 1;
+    [FormerlySerializedAs("ATTACK")] public bool attack = true;
+    private const int JUMP = 3;
 
     // Start is called before the first frame update
-    void Start() {
-        if (rigid == null)
+    private void Start() {
+        if (!rigid)
             rigid = GetComponent<Rigidbody2D>();
 
-        animator = GetComponent<Animator>();
-        animator.SetInteger("PlayerAnimation", IDLE);
+        _animator = GetComponent<Animator>();
+        _animator.SetInteger(PlayerAnimation, Idle);
     }
 
 
     // Update is called once per frame --used for user input
     //do NOT use for physics & movement
-    void Update() {
+    private void Update() {
         movementX = Input.GetAxis("Horizontal");
         movementY = Input.GetAxis("Vertical");
 
@@ -48,26 +50,27 @@ public class Movement : MonoBehaviour {
     //called potentially many times per frame
     //use for physics & movement
     private void FixedUpdate() {
-    Vector2 newVelocity = rigid.velocity;
+    var newVelocity = rigid.linearVelocity;
 
     //Movement on X axis
         if(movementX != 0)
-            newVelocity.x = SPEED * movementX;
-            if (movementX < 0 && isFacingRight || movementX > 0 && !isFacingRight)
-                FlipX();
+            newVelocity.x = Speed * movementX;
+        if (movementX < 0 && isFacingRight || movementX > 0 && !isFacingRight)
+            FlipX();
 
     //Movement on Y axis
         if(movementY != 0)
-            newVelocity.y = SPEED * movementY;
-            if (movementY < 0 && isUpright || movementY > 0 && !isUpright)
-                FlipY();
+            newVelocity.y = Speed * movementY;
+        if (movementY < 0 && isUpright || movementY > 0 && !isUpright)
+            FlipY();
 
-        rigid.velocity = newVelocity;
+        rigid.linearVelocity = newVelocity;
 
     //Shoot
-            if (firePressed)
-                Fire1();
-                firePressed = false;
+    if (firePressed) {
+        Fire1();
+        firePressed = false;
+    }
 
     //Jump
         if (jumpPressed && isGrounded)
@@ -75,14 +78,9 @@ public class Movement : MonoBehaviour {
         else
             jumpPressed = false;
 
-        if(isGrounded){
-            if(movementX < 0 || movementX > 0){
-                animator.SetInteger("PlayerAnimation", RUN);
-            } else {
-                animator.SetInteger("PlayerAnimation", IDLE);
-            }
-        }
-   }
+        if (!isGrounded) return;
+        _animator.SetInteger(PlayerAnimation, movementX is < 0 or > 0 ? Run : Idle);
+    }
 
     private void FlipX() {
         transform.Rotate(0, 180, 0);
@@ -95,35 +93,34 @@ public class Movement : MonoBehaviour {
         }
 
     private void Jump() {
-        animator.SetInteger("PlayerAnimation", JUMP);
-        rigid.velocity = new Vector2(rigid.velocity.x, 0);
+        _animator.SetInteger(PlayerAnimation, JUMP);
+        rigid.linearVelocity = new Vector2(rigid.linearVelocity.x, 0);
         rigid.AddForce(new Vector2(0, jumpForce));
-        Debug.Log("jumped");
         jumpPressed = false;
         isGrounded = false;
     }
     private void Fire1(){
-        animator.SetBool("PlayerAttacks", ATTACK);
+        _animator.SetBool(PlayerAttacks, attack);
         if(isFacingRight){
-            Vector2 position = new Vector2((transform.position.x + CLEARING_PLAYER_ON_INITIATION) , transform.position.y);
-            Instantiate(pinPFB, position, Quaternion.identity);
+            var position = new Vector2((transform.position.x + ClearingPlayerOnInitiation) , transform.position.y);
+            Instantiate(pinPfb, position, Quaternion.identity);
         }else{
-            Vector2 position = new Vector2((transform.position.x + -CLEARING_PLAYER_ON_INITIATION) , transform.position.y);
-            Instantiate(pinPFB, position, Quaternion.identity);
+            var position = new Vector2((transform.position.x + -ClearingPlayerOnInitiation) , transform.position.y);
+            Instantiate(pinPfb, position, Quaternion.identity);
         }
     }
 
     public void EndAttackAnimation(){
-        animator.SetBool("PlayerAttacks", false);
+        _animator.SetBool(PlayerAttacks, false);
     }
 
     public void EndJumpAnimation(){
-        animator.SetInteger("PlayerAnimation", IDLE);
+        _animator.SetInteger(PlayerAnimation, Idle);
     }
 
     private void OnCollisionEnter2D(Collision2D collision) {
         Debug.Log(collision.gameObject.tag);
-        if (collision.gameObject.tag == "Ground")
+        if (collision.gameObject.CompareTag("Ground"))
             isGrounded = true;
         else
             Debug.Log(collision.gameObject.tag);

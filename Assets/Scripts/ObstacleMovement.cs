@@ -1,35 +1,26 @@
-using System.Collections;
-using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 
 public class ObstacleMovement : MonoBehaviour
 {
-    [SerializeField] float movement = 0.8f;
-    [SerializeField] Rigidbody2D rigid;
-    [SerializeField] const int SPEED = 15;
-    [SerializeField] const int X_VALUE_BOUNDARY = 18;
-    [SerializeField] const int X_VALUE_SAFEZONE = 0;
-    [SerializeField] bool checkingPosition;
-    [SerializeField] bool isFacingRight = true;
+    [SerializeField] private float movement = 0.8f;
+    [SerializeField] private Rigidbody2D rigid;
+    private const int Speed = 15;
+    private const int XValueBoundary = 18;
+    private const int XValueSafeZone = 0;
+    [SerializeField] private bool checkingPosition;
+    [SerializeField] private bool isFacingRight = true;
   //  [SerializeField] bool movingRight = true;
 
     // Start is called before the first frame update
-    void Start()
+    private void Start()
     {
-        if (rigid == null)
+        if (!rigid)
             rigid = GetComponent<Rigidbody2D>();
 
-        if(SceneManager.GetActiveScene().name == "Scene2"){
+        if(PersistentData.Instance.GetDifficulty() > 2 || SceneManager.GetActiveScene().name == "Scene2" && PersistentData.Instance.GetDifficulty() == 0){
             movement = 2.2f;
         }
-
-    }
-
-    // Update is called once per frame --used for user input
-    //do NOT use for physics & movement
-    void Update()
-    {
 
     }
 
@@ -39,24 +30,22 @@ public class ObstacleMovement : MonoBehaviour
     {
     //Vector2 newVelocity = rigid.velocity;
     //Movement on X axis
-            rigid.velocity = new Vector2(SPEED * movement, rigid.velocity.y);
+            rigid.linearVelocity = new Vector2(Speed * movement, rigid.linearVelocity.y);
             if (movement < 0 && isFacingRight || movement > 0 && !isFacingRight){
                 FlipX();
-                }
+            }
 
             //Can object safely flip
-            if (transform.position.x > X_VALUE_SAFEZONE  && isFacingRight || transform.position.x < X_VALUE_SAFEZONE && !isFacingRight) {
-                        checkingPosition = true;
-                    }
-
-            if(checkingPosition){
-                if (transform.position.x < -X_VALUE_BOUNDARY || transform.position.x > X_VALUE_BOUNDARY ) {
-                //Checking direction of movement
-                   checkingPosition = false;
-
-                   ChangeDirection();
-                   }
+            if (transform.position.x > XValueSafeZone  && isFacingRight || transform.position.x < XValueSafeZone && !isFacingRight) {
+                checkingPosition = true;
             }
+
+            if (!checkingPosition) return;
+            if (!(transform.position.x < -XValueBoundary) && !(transform.position.x > XValueBoundary)) return;
+            // Checking direction of movement
+            checkingPosition = false;
+
+            ChangeDirection();
     }
 
     private void ChangeDirection(){
@@ -73,7 +62,7 @@ public class ObstacleMovement : MonoBehaviour
     private void OnCollisionEnter2D(Collision2D collision)
     {
         Debug.Log(collision.gameObject.tag);
-        if (collision.gameObject.tag == "Side")
+        if (collision.gameObject.CompareTag("Side"))
             ChangeDirection();
         else
             Debug.Log(collision.gameObject.tag);

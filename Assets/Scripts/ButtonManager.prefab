@@ -44,11 +44,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 6c13f710624f8764c939056bf2a25ece, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  playerNameInput: {fileID: 0}
   pauseButton: {fileID: 8018765466924521553, guid: f7b878a26b1d1a149a15771e57f92de8, type: 3}
   playButton: {fileID: 7797963520340600560, guid: 7cd2588845425254da70b4b042dd5ac3, type: 3}
-  settings: {fileID: 6157825364876263212, guid: 536f83e0d7cadb04ca3c15b98a12fe60, type: 3}
-  settingsElements: []
-  volumeSlider: {fileID: 0}
-  difficultyDropdown: {fileID: 0}
   difficulty: 0

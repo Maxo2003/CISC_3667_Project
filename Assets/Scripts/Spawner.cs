@@ -1,74 +1,74 @@
-using System.Collections;
-using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.SceneManagement;
+using UnityEngine.Serialization;
 
 public class Spawner : MonoBehaviour
 {
-    [SerializeField] int numBalloons = 0;
-   // [SerializeField] int numObstacles = 0;
-    [SerializeField] const int MAX_BALLOONS = 1;
-    [SerializeField] int Max_Obstacles;
-    [SerializeField] const int X_MIN = -17;
-    [SerializeField] const int X_MAX = 17;
-    [SerializeField] const int Y_MIN = 1;
-    [SerializeField] const float Y_MAX = 6.5f;
-    [SerializeField] GameObject Balloon;
-    [SerializeField] GameObject RockInBalloon;
-    [SerializeField] string sceneName;
+    [FormerlySerializedAs("Max_Obstacles")] [SerializeField]
+    private int maxObstacles;
+    private const int XMin = -17;
+    private const int XMax = 17;
+    private const int YMin = 1;
+    private const float YMax = 6.5f;
+    [FormerlySerializedAs("Balloon")] [SerializeField]
+    private GameObject balloon;
+    [FormerlySerializedAs("RockInBalloon")] [SerializeField] private GameObject rockInBalloon;
+    [SerializeField] private string sceneName;
 
     // Start is called before the first frame update
-    void Start()
+    private void Start()
     {
-        if (Balloon == null)
+        if (!balloon)
         {
-            Balloon = GameObject.Find("BalloonPoppingSprite");
+            balloon = GameObject.Find("BalloonPoppingSprite");
         }
 
-        if (RockInBalloon == null)
+        if (!rockInBalloon)
         {
-            RockInBalloon = GameObject.Find("RockInBalloon");
+            rockInBalloon = GameObject.Find("RockInBalloon");
         }
 
         //BalloonSpawner
 
-        InvokeRepeating("BalloonSpawner", 0.0f, 4.0f);
+        InvokeRepeating(nameof(BalloonSpawner), 0.0f, 2.5f);
 
 
         //ObstacleSpawner
-        sceneName = SceneManager.GetActiveScene().name;
-        if(sceneName == "Scene1" || sceneName == "Scene2"){
-            ObstacleSpawner(SceneManager.GetActiveScene().buildIndex);
-        }
+        var difficulty = PersistentData.Instance.GetDifficulty();
+        switch (difficulty)
+        {
+            case 0:
+            {
+                sceneName = SceneManager.GetActiveScene().name;
+                if (sceneName is "Scene1" or "Scene2")
+                {
+                    ObstacleSpawner(SceneManager.GetActiveScene().buildIndex -1);
+                }
 
+                break;
+            }
+            case > 1:
+                ObstacleSpawner(difficulty);
+                break;
+            default:
+                return;
+        }
+        
     }
 
-    // Update is called once per frame
-    void Update()
+    private void BalloonSpawner(){
+            var position = new Vector2(Random.Range(XMin, XMax), Random.Range(YMin, YMax));
+            Instantiate(balloon, position, Quaternion.identity);
+    }
+
+    private void ObstacleSpawner(int sceneNum)
     {
+        maxObstacles = sceneNum == 2 ? 2 : 4;
 
-    }
-
-    void BalloonSpawner(){
-            Vector2 position = new Vector2(Random.Range(X_MIN, X_MAX), Random.Range(Y_MIN, Y_MAX));
-            Instantiate(Balloon, position, Quaternion.identity);
-            numBalloons++;
-    }
-
-    void ObstacleSpawner(int sceneNum){
-        if (sceneNum == 1) {
-            Max_Obstacles = 2;
-        } else {
-            Max_Obstacles = 4;
-        }
-
-        for(int i = 0; i < Max_Obstacles; i++){
-            Vector2 position = new Vector2(Random.Range(X_MIN, X_MAX), Random.Range(Y_MIN, Y_MAX));
-            Instantiate(RockInBalloon, position, Quaternion.identity);
+        for(var i = 0; i < maxObstacles; i++){
+            var position = new Vector2(Random.Range(XMin, XMax), Random.Range(YMin, YMax));
+            Instantiate(rockInBalloon, position, Quaternion.identity);
         }
     }
-
-    public void BalloonPopped(){
-            numBalloons--;
-        }
+    
 }
